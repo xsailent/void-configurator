@@ -1,21 +1,21 @@
+#!/bin/bash
+set -euo pipefail
+
+USER_HOME="$HOME"
+USER_NAME="$(id -un)"
+
 if (( EUID != 0 )); then
-    echo "Ошибка: запустите скрипт с правами root." >&2
-    exit 1
-else
-	xbps-install -Syu linux-firmware-intel mesa-dri xorg vulkan-loader mesa-vulkan-intel libva-intel-driver qtile git rofi firefox alacritty python python-pip lightdm nvim vim
+	su
+	xbps-install -Syu elogind dbus linux-firmware-intel mesa-dri xorg vulkan-loader mesa-vulkan-intel libva-intel-driver qtile git rofi firefox alacritty python python-pip sddm nvim vim stow
+	xbps-install -S $(xbps-query -Rs "ttf-" | awk '{print $2}')
+	ln -s /etc/sv/elogind /var/service
+	ln -s /etc/sv/dbus /var/service
 	git clone https://github.com/xsailent/qtile-dotfiles
-	cd qtile-dotfiles/in\ .config
-	cp -r * ~/.config
-	cd ..
-	cd for\ runit
-	cat in\ etc\\rc.local >> /etc/rc.local
-	cd in\ usr\\local\\bin
-	cp -r * /usr/local/bin
-	cd ../..
-	cd in\ \~\ directory/create\ directory\ with\ name\ .xsalothemes
-	mkdir ~/.xsalothemes
-	cp -r * ~/.xsalothemes
-	ln -s /etc/sv/lightdm /var/service
-	reboot
+	mkdir $USER_HOME/.dotfiles
+	cp qtile-dotfiles/* $USER_HOME/.dotfiles
+	cd $USER_HOME/.dotfiles
+	exit
+	stow .
+	loginctl reboot
 fi
 
